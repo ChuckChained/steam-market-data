@@ -9,12 +9,6 @@ XLSX.set_fs(fs);
 
 let API_KEY = process.env.API_KEY;
 
-let today = new Date().toLocaleDateString();
-
-function write() {
-
-};
-
 async function steam(appID, marketHash, apiKey, callback) { 
 	const url = "https://api.steamapis.com/market/item/" + appID + "/" + marketHash + "?api_key=" + apiKey; // https://api.steamapis.com/market/item/730/Operation%20Breakout%20Weapon%20Case?api_key=KaqwIWdwvJGYZFojCf78qh36CfU
 	const raw_data = await (await fetch(url)).json();
@@ -34,7 +28,6 @@ async function steam(appID, marketHash, apiKey, callback) {
 
 			integerDate: new Date(),
 			name: data[2],
-//			date: data[9][14][0],
 			price: data[9][14][1],
 			volume: data[9][14][2],
 			current_quantity: data[10]['sell_order_summary']['quantity'],
@@ -78,7 +71,6 @@ async function steam(appID, marketHash, apiKey, callback) {
 				let range = XLSX.utils.decode_range(worksheet['!ref'])
 				let num_rows = range.e.r - range.s.r + 1
 				console.log("Number of rows = " + num_rows)
-					// 
 				let yesterday = worksheet["A" + num_rows].v
 				console.log(yesterday)
 				// convert integerDate to excel decimal
@@ -87,10 +79,8 @@ async function steam(appID, marketHash, apiKey, callback) {
 				console.log(converted)
 				// Check if the sample is newer
 				if (yesterday + 0.000001 < converted) {
-				// 	//write here
+
 				console.log("Writing sample to sheet")
-//				console.log(worksheet)
-//				console.log(yesterday)
 				//Add data to sheet
 				await XLSX.utils.sheet_add_json(worksheet, flattened, { origin: -1, skipHeader: true})
 				//XLSX.utils.book_append_sheet(workbook, worksheet, name);
@@ -104,13 +94,9 @@ async function steam(appID, marketHash, apiKey, callback) {
 		{
 			console.log("Sheet Doesn't Exist")
 
-//		const workbook = XLSX.utils.book_new();
-//		let worksheet = workbook['Sheets'][name];
 		let worksheet = XLSX.utils.json_to_sheet(flattened);
-		//if (worksheet['!cols'] != null && worksheet['cols'].length > 0) {
+
 		worksheet["!cols"] = [  { wch: 10 }, { wch: 25 }, { wch: 11 }, { wch: 11 }, { wch: 20 }, { wch: 22 }, { wch: 21 } ];
-
-
 
 		XLSX.utils.sheet_add_aoa(worksheet, [["Date", "Item Name", "Avg Price", "Volume Sold", "Current Quantity Listed", "Current Highest Buy Order", "Current Lowest Sell Order"]], { origin: "A1" });
 		await XLSX.utils.book_append_sheet(workbook, worksheet, name.replace(':', ''));
@@ -127,7 +113,6 @@ async function steam(appID, marketHash, apiKey, callback) {
 
 	}
 
-	
 	callback(date, name, price, quantity, avg, previous_day_price, previous_day_volume);
 
 	}
@@ -141,9 +126,6 @@ function writer(date, name, price, quantity, avg, previous_day_price, previous_d
 };
 
 const game = 730; //CSGO APP ID on steam marketplace
-//const marketHash = ["Operation%20Breakout%20Weapon%20Case", "CS20%20Case"];
-//const apiKey = "SECRET";
-//steam(game, items[0], apiKey, writer);
 
 function run(itemList) {
 
