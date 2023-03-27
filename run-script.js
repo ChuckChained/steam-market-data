@@ -59,7 +59,7 @@ async function steam(appID, marketHash, apiKey, callback) {
 
 			// Check if sheet already exists and add to it
 
-			sheetName[0][i] == name
+			sheetName[0][i] == name.replace(':', '')
 		
 		) {
 			console.log('Sheet Exists');
