@@ -10,7 +10,7 @@ XLSX.set_fs(fs);
 let API_KEY = process.env.API_KEY;
 
 async function steam(appID, marketHash, apiKey, callback) { 
-	const url = "https://api.steamapis.com/market/item/" + appID + "/" + marketHash + "?api_key=" + apiKey; // https://api.steamapis.com/market/item/730/Operation%20Breakout%20Weapon%20Case?api_key=KaqwIWdwvJGYZFojCf78qh36CfU
+	const url = "https://api.steamapis.com/market/item/" + appID + "/" + marketHash + "?api_key=" + apiKey;
 	const raw_data = await (await fetch(url)).json();
 	const data = Object.values(raw_data);
 	const container = Object.values(raw_data).filter(row => row.sell_order_summary);
@@ -46,6 +46,7 @@ async function steam(appID, marketHash, apiKey, callback) {
 	const previous_day_price = avg[1];
 	const previous_day_volume = avg[2];
 	const name = raw_data.market_name;
+	const formattedName = name.replace(':', '');
 
 	console.log(url);
 
@@ -59,13 +60,13 @@ async function steam(appID, marketHash, apiKey, callback) {
 
 			// Check if sheet already exists and add to it
 
-			sheetName[0][i] == name.replace(':', '')
+			sheetName[0][i] == formattedName
 		
 		) {
 			console.log('Sheet Exists');
 
 				// Load sheet from workbook
-				const worksheet = workbook['Sheets'][name];
+				const worksheet = workbook['Sheets'][formattedName];
 				// Assign last date from sheet 
 					// Find highest row
 				let range = XLSX.utils.decode_range(worksheet['!ref'])
@@ -99,7 +100,7 @@ async function steam(appID, marketHash, apiKey, callback) {
 		worksheet["!cols"] = [  { wch: 10 }, { wch: 25 }, { wch: 11 }, { wch: 11 }, { wch: 20 }, { wch: 22 }, { wch: 21 } ];
 
 		XLSX.utils.sheet_add_aoa(worksheet, [["Date", "Item Name", "Avg Price", "Volume Sold", "Current Quantity Listed", "Current Highest Buy Order", "Current Lowest Sell Order"]], { origin: "A1" });
-		await XLSX.utils.book_append_sheet(workbook, worksheet, name.replace(':', ''));
+		await XLSX.utils.book_append_sheet(workbook, worksheet, formattedName);
 
   		console.log(workbook['Sheets'][name])
 
