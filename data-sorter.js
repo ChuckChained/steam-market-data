@@ -178,6 +178,68 @@ for (let j = 2; j < rawsheetnum_rows + 1; j++) {
 }
 
 async function ProcessRaw() {
+	let newbook = XLSX.readFile("test5.xlsx", {cellStyles: true});
+	let rawsheet = newbook['Sheets']['Raw Data'];
+
+	let rawrange = XLSX.utils.decode_range(rawsheet['!ref'])
+	let rawnum_rows = rawrange.e.r - rawrange.s.r + 1
+	console.log(rawnum_rows)
+
+	for (let i = 2; i < rawnum_rows + 1; i++) {
+
+		let item = rawsheet["B" + i].v;
+		console.log(item);
+
+		let timestamp = rawsheet["A" + i].v;
+		console.log(timestamp);
+
+		let rowtoadd = [{
+			intdate: rawsheet["A"+i],
+			name: rawsheet["B"+i],
+			price: rawsheet["C"+i],
+			volume: rawsheet["D"+i],
+			current_quantity: rawsheet["E"+i],
+			current_highest_buy_order: rawsheet["F"+i],
+			current_lowest_sell_order: rawsheet["G"+i]
+		}]
+
+		let tidyname = item.replace(':', '');
+		if (newbook['Sheets'][tidyname] == undefined) {
+
+			let newsheet = XLSX.utils.json_to_sheet(rowtoadd);
+			newsheet["!cols"] = [  { wch: 10 }, { wch: 25 }, { wch: 11 }, { wch: 11 }, { wch: 20 }, { wch: 22 }, { wch: 21 } ];
+
+			XLSX.utils.sheet_add_aoa(newsheet, [["Date", "Item Name", "Avg Price", "Volume Sold", "Current Quantity Listed", "Current Highest Buy Order", "Current Lowest Sell Order"]], { origin: "A1" });
+
+			await XLSX.utils.book_append_sheet(newbook, newsheet, tidyname)
+			console.log("Created Sheet " + tidyname)
+
+
+		} else {
+			let itemsheet = newbook['Sheets'][tidyname]
+			let itemsheetrange = XLSX.utils.decode_range(itemsheet['!ref'])
+			let itemsheetnum_rows = itemsheetrange.e.r - itemsheetrange.s.r + 1;
+			// Loop through sheet to check samples are newer
+			for (let j = 2; j <= itemsheetnum_rows; j++) {
+				let oldtimestamp = itemsheet["A" + j].v;
+				if (j == itemsheetnum_rows && timestamp > oldtimestamp + 0.0049) {
+					await XLSX.utils.sheet_add_json(itemsheet, rowtoadd, { origin: -1, skipHeader: true})
+					console.log("Acceptable sample, adding to sheet.")
+				} else if (timestamp > oldtimestamp + 0.0049) {
+				console.log("Timestamp is at least 1 hour newer")
+					} else {
+						console.log("Timestamp is only 0-1 hours newer. Not writing.");
+						break
+					}
+
+			} 
+
+
+		}
+
+		XLSX.writeFileXLSX(newbook, "test5.xlsx");
+
+	}
 
 }
 
@@ -193,7 +255,8 @@ async function SortData() {
 	if (await CheckWriteFile() == true) {
 		console.log("Found file in SortData")
 		// APPEND SHEET
-		PullAndAddToRaw()
+		//PullAndAddToRaw()
+		ProcessRaw()
 
 	} else {
 		console.log("No file found in SortData")
